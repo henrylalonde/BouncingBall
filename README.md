@@ -5,7 +5,8 @@ Created using **C++** and **SDL3**. This program allows you to:
 
 - Control a ball using your mouse
 - Bounce another ball around the screen
-//insert image here
+### **Riveting Gameplay**
+![Picture of two circles on a black background](https://raw.githubusercontent.com/henrylalonde/BouncingBall/refs/heads/master/Screenshot%202025-03-18%20152137.png)
 
 
 ## **How to Play**
