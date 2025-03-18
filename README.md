@@ -1,7 +1,7 @@
 # Bouncing Ball
 ##  **My first graphics program**
 
-Created using **C++** and **SDL3**, this little demo program lets you use your mouse to control a circle on screen. There is another circle on the screen with simulated collisions, gravity, and friction. Run your mouse circle into the other circle to make it bounce around and go fast!
+Created using **C++** and **SDL3**, this little demo program lets you use your mouse to control a circle on screen. Run your mouse circle into the other circle to make it bounce around and go fast!
 ### **Riveting Gameplay**
 ![Picture of two circles on a black background](https://raw.githubusercontent.com/henrylalonde/BouncingBall/refs/heads/master/Screenshot%202025-03-18%20152137.png)
 
