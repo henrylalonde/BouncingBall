@@ -112,18 +112,26 @@ void drawCircle(Circle* c) {
 	}
 }
 
-void updatePhysics(Circle* c, double dt) {
+void updateTexture() {
+	SDL_UpdateTexture(TEXTURE, NULL, FRAME_BUFFER, WINDOW_WIDTH * 4);
+	SDL_RenderTexture(RENDERER, TEXTURE, NULL, NULL);
+	SDL_RenderPresent(RENDERER);
+}
+
+void updatePhysics(Circle* c) {
+	const double dt = 0.03;
+
+	c->x += c->vx * dt;
+	c->y += c->vy * dt;
 
 	c->vx += c->ax * dt;
 	c->vy += c->ay * dt;
 
-	const double drag = 0.995;
+	const double drag = 0.999;
 	c->vx *= drag;
 	c->vy *= drag;
-	c->x += c->vx * dt;
-	c->y += c->vy * dt;
 
-	const double damping = 0.8;
+	const double damping = 0.9;
 	double left = c->x - c->r;
 	if (left < 0) {
 		c->vx = -c->vx * damping;
@@ -146,6 +154,25 @@ void updatePhysics(Circle* c, double dt) {
 	}
 }
 
+void pauseRefresh(Circle* c1, Circle* c2) {
+	return;
+	drawCircle(c1);
+	drawCircle(c2);
+	updateTexture();
+	while (1) {
+		SDL_Event event;
+		SDL_PollEvent(&event);
+		if (event.type == SDL_EVENT_QUIT) {
+			break;
+		}
+		if (event.type == SDL_EVENT_KEY_UP && event.key.key == SDLK_SPACE) {
+			break;
+		}
+	}
+	patchCircle(c1);
+	patchCircle(c2);
+}
+
 void collide(Circle* c1, Circle* c2) {
 	c2->color = 0xff0000ff;
 
@@ -161,8 +188,14 @@ void collide(Circle* c1, Circle* c2) {
 	rr *= rr;
 	double c = x * x + y * y - rr;
 
-	// t should always be positive. if collisions are weird, check here
-	double t = (-b + sqrt(b * b - 4 * a * c)) / (2 * a);
+	double t1 = (-b + sqrt(b * b - 4 * a * c)) / (2 * a);
+	double t2 = (-b - sqrt(b * b - 4 * a * c)) / (2 * a);
+	double t;
+	if (-t2 < t1) {
+		t = t2;
+	} else {
+		t = t1;
+	}
 
 	c1->x = c1->x - c1->vx * t;
 	c1->y = c1->y - c1->vy * t;
@@ -203,25 +236,6 @@ void checkCollisions(Circle c[], int num) {
 	}
 }
 
-void updateTexture1() {
-	char* pix;
-	int pitch;
-
-	SDL_LockTexture(TEXTURE, NULL, (void**)&pix, &pitch);
-	for (int i = 0, sp = 0, dp = 0; i < WINDOW_HEIGHT; i++, dp += WINDOW_WIDTH, sp += pitch)
-		memcpy(pix + sp, FRAME_BUFFER + dp, WINDOW_WIDTH * 4);
-
-	SDL_UnlockTexture(TEXTURE);
-	SDL_RenderTexture(RENDERER, TEXTURE, NULL, NULL);
-	SDL_RenderPresent(RENDERER);
-}
-
-void updateTexture2() {
-	SDL_UpdateTexture(TEXTURE, NULL, FRAME_BUFFER, WINDOW_WIDTH * 4);
-	SDL_RenderTexture(RENDERER, TEXTURE, NULL, NULL);
-	SDL_RenderPresent(RENDERER);
-}
-
 void loop() {
 	static uint64_t lastTick = 0;
 	static Circle c[3] = {
@@ -240,7 +254,7 @@ void loop() {
 		return;
 	}
 
-	updateTexture2();
+	updateTexture();
 
 	patchCircle(c);
 	patchCircle(c + 1);
@@ -249,14 +263,17 @@ void loop() {
 	float mouseY;
 
 	uint64_t tick = SDL_GetTicks();
-	double dt = (tick - lastTick) * 0.02;
-	SDL_GetGlobalMouseState(&mouseX, &mouseY);
-	c[1].vx = (mouseX - c[1].x) / dt;
-	c[1].vy = (mouseY - c[1].y) / dt;
-	c[1].x = mouseX;
-	c[1].y = mouseY;
-	updatePhysics(c, dt);
-	checkCollisions(c, 2);
+	uint64_t tickDif = tick - lastTick;
+	while (tickDif > 0) {
+		SDL_GetGlobalMouseState(&mouseX, &mouseY);
+		c[1].vx = 2 * (mouseX - c[1].x);
+		c[1].vy = 2 * (mouseY - c[1].y);
+		c[1].x = mouseX;
+		c[1].y = mouseY;
+		updatePhysics(c);
+		checkCollisions(c, 2);
+		tickDif--;
+	}
 
 	drawCircle(c);
 	drawCircle(c + 1);
